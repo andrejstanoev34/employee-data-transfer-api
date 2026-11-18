@@ -1,3 +1,4 @@
+using EmployeeDataImporterApi.Domain.Common;
 using EmployeeDataImporterApi.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -23,16 +24,16 @@ public class OrganisationConfiguration : IEntityTypeConfiguration<Organisation>
             {
                 Id = Guid.Parse("08b581a5-7ae0-470b-aa31-d1a6a1ad5ece"),
                 IsDeleted = false,
-                CreatedAt = new DateTime(2026,11,18,0,0,0),
-                UpdatedAt = new DateTime(2026,11,18,0,0,0),
+                CreatedAt = SeedData.SeedDate,
+                UpdatedAt = SeedData.SeedDate,
                 Name = "Shelby Limited Co."
             },
             new Organisation()
             {
                 Id = Guid.Parse("49b43e69-ed71-4ac2-80cf-f73acec0e11f"),
                 IsDeleted = false,
-                CreatedAt = new DateTime(2026,11,18,0,0,0),
-                UpdatedAt = new DateTime(2026,11,18,0,0,0),
+                CreatedAt = SeedData.SeedDate,
+                UpdatedAt = SeedData.SeedDate,
                 Name = "Dunder Mifflin Paper Co."
             }
         };

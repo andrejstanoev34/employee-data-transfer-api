@@ -39,7 +39,6 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .HasPrecision(18, 2);
 
         builder.Property(e => e.RoleLevel)
-            .HasDefaultValue(RoleLevel.Junior)
             .HasConversion<string>()
             .HasMaxLength(50);
 
@@ -65,9 +64,5 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .WithMany(o=>o.Employees)
             .HasForeignKey(e => e.OfficeId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasMany(e => e.Skills)
-            .WithMany(s => s.Employees)
-            .UsingEntity(j => j.ToTable("EmployeeSkills"));
     }
 }

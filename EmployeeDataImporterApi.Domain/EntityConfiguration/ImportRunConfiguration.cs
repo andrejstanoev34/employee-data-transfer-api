@@ -35,7 +35,7 @@ public class ImportRunConfiguration : IEntityTypeConfiguration<ImportRun>
             .HasDefaultValue(0);
 
         builder.HasOne(r => r.Organisation)
-            .WithMany()
+            .WithMany(o=>o.ImportRuns)
             .HasForeignKey(r => r.OrganisationId)
             .OnDelete(DeleteBehavior.Restrict);
         

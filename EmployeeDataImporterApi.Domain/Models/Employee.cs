@@ -14,7 +14,7 @@ public class Employee: BaseEntity
     public decimal? Salary {get; set;}
     public string? Phone { get; set; }
     public string? Notes {get; set;}
-    public RoleLevel RoleLevel {get; set;}
+    public RoleLevel? RoleLevel {get; set;}
     
     public Guid? ManagerId {get; set;}
     public Employee? Manager {get; set;}
