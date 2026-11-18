@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="EmployeeDataImporterApi.Domain/EmployeeDataImporterApi.Domain.csproj" />
   <Project Path="EmployeeDataImporterApi/EmployeeDataImporterApi.csproj" />
 </Solution>
