@@ -11,5 +11,5 @@ public class Department: BaseEntity
     public Organisation Organisation { get; set; }
     
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
-    public ICollection<Office> Offices { get; set; } = new List<Office>();
+    public ICollection<DepartmentOffice> Offices { get; set; } = new List<DepartmentOffice>();
 }

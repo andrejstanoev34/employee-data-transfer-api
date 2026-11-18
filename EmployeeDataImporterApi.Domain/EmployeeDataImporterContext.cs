@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+using EmployeeDataImporterApi.Domain.Common;
 using EmployeeDataImporterApi.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,6 +27,18 @@ public class EmployeeDataImporterContext: DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EmployeeDataImporterContext).Assembly);
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (!typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+                continue;
+
+            // builds:  e => !e.IsDeleted
+            var parameter = Expression.Parameter(entityType.ClrType, "e");
+            var isDeleted = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
+            var filter = Expression.Lambda(Expression.Not(isDeleted), parameter);
+
+            entityType.SetQueryFilter(filter);
+        }
         base.OnModelCreating(modelBuilder);
     }
 }

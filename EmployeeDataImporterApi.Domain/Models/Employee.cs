@@ -20,7 +20,7 @@ public class Employee: BaseEntity
     public Employee? Manager {get; set;}
     public ICollection<Employee> Employees {get; set;} = new List<Employee>();
     
-    public ICollection<Skill> Skills {get; set;} = new List<Skill>();
+    public ICollection<EmployeeSkill> Skills {get; set;} = new List<EmployeeSkill>();
     
     public Guid RoleId {get; set;}
     public Role? Role {get; set;}
@@ -30,4 +30,7 @@ public class Employee: BaseEntity
     
     public Guid OfficeId {get; set;}
     public Office? Office {get; set;}
+    
+    public Guid OrganisationId {get; set;}
+    public Organisation? Organisation {get; set;}
 }

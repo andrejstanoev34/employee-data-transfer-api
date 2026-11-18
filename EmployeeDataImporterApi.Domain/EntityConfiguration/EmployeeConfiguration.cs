@@ -42,8 +42,15 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .HasConversion<string>()
             .HasMaxLength(50);
 
-        builder.HasIndex(e => e.EmployeeNumber).IsUnique();
-        builder.HasIndex(e => e.Email).IsUnique();
+        builder.HasIndex(e => e.Email).IsUnique().HasFilter("\"IsDeleted\" = false");
+        builder.HasIndex(e => new { e.OrganisationId, e.EmployeeNumber })
+            .IsUnique()
+            .HasFilter("\"IsDeleted\" = false");
+        
+        builder.HasOne(e=>e.Organisation)
+            .WithMany(o=>o.Employees)
+            .HasForeignKey(e => e.OrganisationId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(e => e.Manager)
             .WithMany(m => m.Employees)

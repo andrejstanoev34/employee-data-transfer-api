@@ -25,10 +25,6 @@ public class OfficeConfiguration : IEntityTypeConfiguration<Office>
             .WithMany(x=>x.Offices)
             .HasForeignKey(o=>o.OrganisationId)
             .OnDelete(DeleteBehavior.Restrict);
-        
-        builder.HasMany(o => o.Departments)
-            .WithMany(d => d.Offices)
-            .UsingEntity(j => j.ToTable("OfficeDepartments"));
 
         var offices = new Office[]
         {

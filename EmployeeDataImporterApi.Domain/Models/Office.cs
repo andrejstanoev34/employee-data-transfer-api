@@ -10,7 +10,7 @@ public class Office: BaseEntity
     public Guid OrganisationId { get; set; }
     public Organisation Organisation { get; set; }
     
-    public ICollection<Department> Departments { get; set; } = new List<Department>();
+    public ICollection<DepartmentOffice> Departments { get; set; } = new List<DepartmentOffice>();
     
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
 }

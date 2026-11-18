@@ -6,5 +6,5 @@ public class Skill: BaseEntity
 {
     public string Name { get; set; }
     
-    public ICollection<Employee> Employees { get; set; } = new List<Employee>();
+    public ICollection<EmployeeSkill> Employees { get; set; } = new List<EmployeeSkill>();
 }
