@@ -13,6 +13,7 @@ public class ImportRun: BaseEntity
     public DateTime StartTime {get; set;}
     public DateTime? EndTime {get; set;}
     public ImportStatus Status {get; set;}
+    public string Message {get; set;}
     public int TotalRows {get; set;}
     public int ProcessedRows {get; set;}
     

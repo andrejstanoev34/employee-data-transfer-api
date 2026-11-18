@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\EmployeeDataImporterApi.Domain\EmployeeDataImporterApi.Domain.csproj" />
+    </ItemGroup>
+
 </Project>

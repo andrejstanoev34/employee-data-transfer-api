@@ -17,6 +17,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\EmployeeDataImporterApi.Domain\EmployeeDataImporterApi.Domain.csproj" />
+      <ProjectReference Include="..\EmployeeDataImporterApi.Repository\EmployeeDataImporterApi.Repository.csproj" />
+      <ProjectReference Include="..\EmployeeDataImporterApi.Services\EmployeeDataImporterApi.Services.csproj" />
     </ItemGroup>
 
 </Project>

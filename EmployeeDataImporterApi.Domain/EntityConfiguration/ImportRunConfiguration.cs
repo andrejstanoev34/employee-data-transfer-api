@@ -33,7 +33,11 @@ public class ImportRunConfiguration : IEntityTypeConfiguration<ImportRun>
         builder.Property(r => r.ProcessedRows)
             .IsRequired()
             .HasDefaultValue(0);
-
+        
+        builder.Property(r => r.Message)
+            .HasDefaultValue(string.Empty)
+            .HasMaxLength(250);
+        
         builder.HasOne(r => r.Organisation)
             .WithMany(o=>o.ImportRuns)
             .HasForeignKey(r => r.OrganisationId)

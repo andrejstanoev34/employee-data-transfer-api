@@ -431,6 +431,13 @@ namespace EmployeeDataImporterApi.Domain.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasDefaultValue("");
+
                     b.Property<Guid>("OrganisationId")
                         .HasColumnType("uuid");
 

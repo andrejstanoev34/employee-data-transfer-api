@@ -1,4 +1,6 @@
 using EmployeeDataImporterApi.Domain;
+using EmployeeDataImporterApi.Domain.Common;
+using EmployeeDataImporterApi.Repository;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +11,7 @@ builder.Services.AddDbContext<EmployeeDataImporterContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.AddScoped(typeof(Repository<>));
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
