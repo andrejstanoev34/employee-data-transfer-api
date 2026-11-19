@@ -20,6 +20,8 @@ public class ExcelEmployeeFileReader : IEmployeeFileReader
             var ws = workSheets.First();
             if (ws.IsEmpty())
             {
+                importedData.HasIssue = true;
+                importedData.Message = "Empty file";
                 return importedData;
             }
         }
@@ -57,10 +59,13 @@ public class ExcelEmployeeFileReader : IEmployeeFileReader
         {
             if (!headers.ContainsKey(h))
             {
-                data.Message = $"The header {h} is missing. Importing stopped";
-                return data;
+                data.HasIssue = true;
+                data.Message.Add($"The header {h} is missing from employees file. Importing stopped");
             }
         }
+        
+        if (data.HasIssue)
+            return data;
 
         var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
 
@@ -118,10 +123,13 @@ public class ExcelEmployeeFileReader : IEmployeeFileReader
         {
             if (!headers.ContainsKey(h))
             {
-                data.Message = $"The header {h} is missing. Importing stopped";
-                return data;
+                data.HasIssue = true;
+                data.Message.Add($"The header {h} is missing from skills file. Importing stopped");
             }
         }
+        
+        if (data.HasIssue)
+            return data;
 
         var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
 
@@ -148,7 +156,6 @@ public class ExcelEmployeeFileReader : IEmployeeFileReader
         
         return data;
     }
-    
     
     private string? GetValue(IXLWorksheet worksheet, int row, int col)
     {

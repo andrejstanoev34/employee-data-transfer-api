@@ -4,4 +4,6 @@ public class ImportedData
 {
     public ImportedEmployeesData ImportedEmployeesData { get; set; } = new ImportedEmployeesData();
     public ImportedSkillsData ImportedSkillsData { get; set; } =  new ImportedSkillsData();
+    public bool HasIssue { get; set; } = false;
+    public string Message { get; set; } = "";
 }
