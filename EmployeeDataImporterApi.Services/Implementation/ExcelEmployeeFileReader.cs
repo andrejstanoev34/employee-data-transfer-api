@@ -1,53 +1,173 @@
+using System.Globalization;
 using ClosedXML.Excel;
 using EmployeeDataImporterApi.Domain.Dto;
-using EmployeeDataImporterApi.Domain.Enums;
-using EmployeeDataImporterApi.Domain.Models;
 using EmployeeDataImporterApi.Services.Interface;
 
 namespace EmployeeDataImporterApi.Services.Implementation;
 
 public class ExcelEmployeeFileReader : IEmployeeFileReader
 {
-    public ImportRunDto ReadFile(Stream stream)
+    public ImportedData ReadFile(Stream stream)
     {
         using var workBook = new XLWorkbook(stream);
         var workSheets = workBook.Worksheets;
         var numSheets = workSheets.Count;
-
+        
+        var importedData = new ImportedData();
+        
         if (numSheets == 1)
         {
             var ws = workSheets.First();
             if (ws.IsEmpty())
             {
-                return null;
+                return importedData;
             }
         }
-
+        
         for (int i = 1; i <= numSheets; i++)
         {
             var ws = workBook.Worksheet(i);
-            ProcessSheet(ws);
+            ReadSheet(ws, importedData);
         }
 
-        return null;
+        return importedData;
     }
 
-    private ImportRunDto ProcessSheet(IXLWorksheet worksheet)
+    private void ReadSheet(IXLWorksheet worksheet, ImportedData data)
     {
         if (worksheet.Name.ToLower().Contains("skill"))
         {
-            return ProcessSkills(worksheet);
+            data.ImportedSkillsData = ReadSkills(worksheet);
         }
         else
         {
-            return ProcessEmployees(worksheet);
+            data.ImportedEmployeesData = ReadEmployees(worksheet);
         }
     }
 
-    private ImportRunDto ProcessEmployees(IXLWorksheet worksheet)
+    private ImportedEmployeesData ReadEmployees(IXLWorksheet worksheet)
     {
+        var data = new ImportedEmployeesData();
+        
         var requiredHeaders = new List<string> {"employeenumber", "firstname", "lastname", "email", "dateofbirth", "hiredate", "departmentcode", "roletitle", "officecity", "salary", "phone", "manageremployeenumber", "notes" };
         
+        var headers = GetHeaders(worksheet);
+
+        foreach (var h in requiredHeaders)
+        {
+            if (!headers.ContainsKey(h))
+            {
+                data.Message = $"The header {h} is missing. Importing stopped";
+                return data;
+            }
+        }
+
+        var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
+
+        for (int row = 2; row <= lastRow; row++)
+        {
+            string? employeeNumber = GetValue(worksheet, row, headers["employeenumber"]);
+            string? firstName = GetValue(worksheet, row, headers["firstname"]);
+            string? lastName = GetValue(worksheet, row, headers["lastname"]);
+            string? email = GetValue(worksheet, row, headers["email"]); 
+            string? dateOfBirth = GetValue(worksheet, row, headers["dateofbirth"]);
+            string? hiredate = GetValue(worksheet, row, headers["hiredate"]);
+            string? departmentcode = GetValue(worksheet, row, headers["departmentcode"]);
+            string? roleTitle = GetValue(worksheet, row, headers["roletitle"]);
+            string? officecity = GetValue(worksheet, row, headers["officecity"]);
+            string? salary = GetValue(worksheet, row, headers["salary"]);
+            string? phone = GetValue(worksheet, row, headers["phone"]);
+            string? managerEmployeeNumber = GetValue(worksheet, row, headers["manageremployeenumber"]);
+            string? notes = GetValue(worksheet, row, headers["notes"]);
+            
+            var emp = new ImportedEmployee()
+            {
+                RowNumber = row,
+                EmployeeNumber = employeeNumber,
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
+                DateOfBirth = dateOfBirth,
+                HireDate = hiredate,
+                DepartmentCode = departmentcode,
+                RoleTitle = roleTitle,
+                OfficeCity = officecity,
+                Salary = salary,
+                Phone = phone,
+                ManagerEmployeeNumber = managerEmployeeNumber,
+                Notes = notes
+            };
+            data.ImportedEmployees.Add(emp);
+            //"employeenumber", "firstname", "lastname", "email", "dateofbirth", "hiredate", "departmentcode", "roletitle", "officecity", "salary", "phone", "manageremployeenumber", "notes" }
+        }
+
+        data.TotalEmployeeRows = lastRow - 1;
+        
+        return data;
+    }
+    
+    private ImportedSkillsData ReadSkills(IXLWorksheet worksheet)
+    {
+        var data = new ImportedSkillsData();
+        
+        var requiredHeaders = new List<string> {"employeenumber", "firstname", "lastname", "dateofbirth", "skillname"};
+        
+        var headers = GetHeaders(worksheet);
+
+        foreach (var h in requiredHeaders)
+        {
+            if (!headers.ContainsKey(h))
+            {
+                data.Message = $"The header {h} is missing. Importing stopped";
+                return data;
+            }
+        }
+
+        var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
+
+        for (int row = 2; row <= lastRow; row++)
+        {
+            string? employeeNumber = GetValue(worksheet, row, headers["employeenumber"]);
+            string? firstName = GetValue(worksheet, row, headers["firstname"]);
+            string? lastName = GetValue(worksheet, row, headers["lastname"]);
+            string? dateOfBirth = GetValue(worksheet, row, headers["dateofbirth"]);
+            string? skillName = GetValue(worksheet, row, headers["skillname"]);
+            
+            data.ImportedSkills.Add(new ImportedSkill()
+            {
+                RowNumber = row,
+                EmployeeNumber = employeeNumber,
+                FirstName = firstName,
+                LastName = lastName,
+                DateOfBirth = dateOfBirth,
+                SkillName = skillName
+            });
+        }
+
+        data.TotalSkillRows = lastRow - 1;
+        
+        return data;
+    }
+    
+    
+    private string? GetValue(IXLWorksheet worksheet, int row, int col)
+    {
+        var cell = worksheet.Cell(row, col);
+        if (cell.IsEmpty()) return null;
+
+        string value = cell.DataType switch
+        {
+            XLDataType.DateTime => cell.GetDateTime().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            XLDataType.Number   => cell.GetDouble().ToString("0.##########", CultureInfo.InvariantCulture),
+            _                   => cell.GetString().Trim()
+        };
+
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    }
+
+    private Dictionary<string, int> GetHeaders(IXLWorksheet worksheet)
+    {
         var headers = new Dictionary<string, int>();
         
         var headersRow = worksheet.Row(1);
@@ -56,66 +176,7 @@ public class ExcelEmployeeFileReader : IEmployeeFileReader
         {
             headers[headersRow.Cell(col).GetString().Trim().ToLower()] = col;
         }
-
-        foreach (var h in requiredHeaders)
-        {
-            if (!headers.ContainsKey(h))
-            {
-                return null;
-            }
-        }
-
-        var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
-
-        for (int row = 2; row <= lastRow; row++)
-        {
-            var rowErrors = new List<ImportRowError>();
-            var employeeNumber = worksheet.Cell(row, headers["employeenumber"]).GetString().Trim();
-            if (string.IsNullOrEmpty(employeeNumber))
-            {
-                rowErrors.Add(
-                    new ImportRowError()
-                    {
-                        Field = "Employee Number",
-                        Message = "Employee Number is required",
-                        Value = "",
-                        ErrorType = ErrorType.MissingRequiredField
-                    }    
-                );
-            }
-            var firstName = worksheet.Cell(row, headers["firstname"]).GetString().Trim();
-            if (string.IsNullOrEmpty(firstName))
-            {
-                rowErrors.Add(
-                    new ImportRowError()
-                    {
-                        Field = "First Name",
-                        Message = "First Name is required",
-                        Value = "",
-                        ErrorType = ErrorType.MissingRequiredField
-                    }    
-                );
-            }
-            var lastName = worksheet.Cell(row, headers["lastname"]).GetString().Trim();
-            if (string.IsNullOrEmpty(lastName))
-            {
-                rowErrors.Add(
-                    new ImportRowError()
-                    {
-                        Field = "Last Name",
-                        Message = "Last Name is required",
-                        Value = "",
-                        ErrorType = ErrorType.MissingRequiredField
-                    }    
-                );
-            }
-        }
-
-        return null;
-    }
-    
-    private ImportRunDto ProcessSkills(IXLWorksheet worksheet)
-    {
-        return null;
+        
+        return headers;
     }
 }

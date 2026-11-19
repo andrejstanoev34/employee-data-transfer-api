@@ -4,5 +4,5 @@ namespace EmployeeDataImporterApi.Services.Interface;
 
 public interface IEmployeeFileReader
 {
-    public ImportRunDto ReadFile(Stream stream);
+    public ImportedData ReadFile(Stream stream);
 }

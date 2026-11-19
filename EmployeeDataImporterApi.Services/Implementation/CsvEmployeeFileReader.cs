@@ -5,7 +5,7 @@ namespace EmployeeDataImporterApi.Services.Implementation;
 
 public class CsvEmployeeFileReader : IEmployeeFileReader
 {
-    public ImportRunDto ReadFile(Stream stream)
+    public ImportedData ReadFile(Stream stream)
     {
         throw new NotImplementedException();
     }
