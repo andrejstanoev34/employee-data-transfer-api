@@ -6,4 +6,13 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\EmployeeDataImporterApi.Domain\EmployeeDataImporterApi.Domain.csproj" />
+      <ProjectReference Include="..\EmployeeDataImporterApi.Repository\EmployeeDataImporterApi.Repository.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="ClosedXML" Version="0.105.1" />
+    </ItemGroup>
+
 </Project>
