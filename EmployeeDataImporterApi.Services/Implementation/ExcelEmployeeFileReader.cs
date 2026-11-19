@@ -20,8 +20,7 @@ public class ExcelEmployeeFileReader : IEmployeeFileReader
             var ws = workSheets.First();
             if (ws.IsEmpty())
             {
-                importedData.HasIssue = true;
-                importedData.Message = "Empty file";
+                importedData.AddMessage("Empty file");
                 return importedData;
             }
         }
