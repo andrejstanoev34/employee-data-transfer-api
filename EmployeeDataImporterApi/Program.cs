@@ -1,5 +1,6 @@
 using EmployeeDataImporterApi.Domain;
 using EmployeeDataImporterApi.Domain.Common;
+using EmployeeDataImporterApi.Middleware;
 using EmployeeDataImporterApi.Repository;
 using EmployeeDataImporterApi.Services.Implementation;
 using EmployeeDataImporterApi.Services.Interface;
@@ -33,7 +34,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
+app.UseMiddleware<FileExtensionMiddleware>();
 app.MapControllers();
 
 app.Run();

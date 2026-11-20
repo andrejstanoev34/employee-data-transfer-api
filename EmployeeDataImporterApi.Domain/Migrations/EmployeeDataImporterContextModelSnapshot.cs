@@ -385,8 +385,8 @@ namespace EmployeeDataImporterApi.Domain.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("EmployeeNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("ImportRunId")
                         .HasColumnType("uuid");

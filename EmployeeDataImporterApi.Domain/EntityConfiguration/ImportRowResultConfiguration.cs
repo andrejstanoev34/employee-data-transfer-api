@@ -16,7 +16,8 @@ public class ImportRowResultConfiguration : IEntityTypeConfiguration<ImportRowRe
             .IsRequired();
 
         builder.Property(i => i.EmployeeNumber)
-            .IsRequired();
+            .HasMaxLength(100)       
+            .IsRequired(false);
 
         builder.Property(i => i.Status)
             .HasConversion<string>();

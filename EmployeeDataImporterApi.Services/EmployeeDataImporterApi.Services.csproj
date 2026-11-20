@@ -8,7 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\EmployeeDataImporterApi.Domain\EmployeeDataImporterApi.Domain.csproj" />
-      <ProjectReference Include="..\EmployeeDataImporterApi.Repository\EmployeeDataImporterApi.Repository.csproj" />
+      <ProjectReference Include="..\EmployeeDataImporterApi.Repositories\EmployeeDataImporterApi.Repositories.csproj" />
     </ItemGroup>
 
     <ItemGroup>
