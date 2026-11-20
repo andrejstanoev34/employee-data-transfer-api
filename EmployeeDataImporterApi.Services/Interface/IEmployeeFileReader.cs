@@ -3,6 +3,7 @@ using EmployeeDataImporterApi.Domain.Dto;
 namespace EmployeeDataImporterApi.Services.Interface;
 
 public interface IEmployeeFileReader
-{
-    public ImportedData ReadFile(Stream stream);
+{ 
+    void ReadFile(Stream stream, ImportedData importedData, string fileName);
+    bool CanReadFile(string extension);
 }

@@ -7,13 +7,11 @@ namespace EmployeeDataImporterApi.Services.Implementation;
 
 public class ExcelEmployeeFileReader : IEmployeeFileReader
 {
-    public ImportedData ReadFile(Stream stream)
+    public void ReadFile(Stream stream, ImportedData importedData, string fileName)
     {
-        using var workBook = new XLWorkbook(stream);
-        var workSheets = workBook.Worksheets;
+        using var workbook = new XLWorkbook(stream);
+        var workSheets = workbook.Worksheets;
         var numSheets = workSheets.Count;
-        
-        var importedData = new ImportedData();
         
         if (numSheets == 1)
         {
@@ -21,18 +19,19 @@ public class ExcelEmployeeFileReader : IEmployeeFileReader
             if (ws.IsEmpty())
             {
                 importedData.AddMessage("Empty file");
-                return importedData;
+                return;
             }
         }
         
         for (int i = 1; i <= numSheets; i++)
         {
-            var ws = workBook.Worksheet(i);
+            var ws = workbook.Worksheet(i);
             ReadSheet(ws, importedData);
         }
-
-        return importedData;
     }
+
+    public bool CanReadFile(string extension) =>
+        extension.Equals(".xlsx", StringComparison.OrdinalIgnoreCase);
 
     private void ReadSheet(IXLWorksheet worksheet, ImportedData data)
     {
@@ -50,21 +49,14 @@ public class ExcelEmployeeFileReader : IEmployeeFileReader
     {
         var data = new ImportedEmployeesData();
         
-        var requiredHeaders = new List<string> {"employeenumber", "firstname", "lastname", "email", "dateofbirth", "hiredate", "departmentcode", "roletitle", "officecity", "salary", "phone", "manageremployeenumber", "notes" };
-        
         var headers = GetHeaders(worksheet);
 
-        foreach (var h in requiredHeaders)
+        if (!HasHeaders(headers, data.Message, "employees", "employeenumber", "firstname", "lastname", "email",
+                "dateofbirth", "hiredate", "departmentcode", "roletitle", "officecity", "salary", "phone",
+                "manageremployeenumber", "notes"))
         {
-            if (!headers.ContainsKey(h))
-            {
-                data.HasIssue = true;
-                data.Message.Add($"The header {h} is missing from employees file. Importing stopped");
-            }
-        }
-        
-        if (data.HasIssue)
             return data;
+        }
 
         var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
 
@@ -109,26 +101,29 @@ public class ExcelEmployeeFileReader : IEmployeeFileReader
         
         return data;
     }
+
+
+    private bool HasHeaders(Dictionary<string, int> headers, List<string> messages, string fileType, params string[] requiredHeaders)
+    {
+        var missingHeaders = requiredHeaders.Where(h => !headers.ContainsKey(h)).ToList();
+        foreach (var h in missingHeaders)
+        {
+            messages.Add($"The header {h} is missing from {fileType} file.");
+        }
+
+        return missingHeaders.Count == 0;
+    }
     
     private ImportedSkillsData ReadSkills(IXLWorksheet worksheet)
     {
         var data = new ImportedSkillsData();
         
-        var requiredHeaders = new List<string> {"employeenumber", "firstname", "lastname", "dateofbirth", "skillname"};
-        
         var headers = GetHeaders(worksheet);
 
-        foreach (var h in requiredHeaders)
+        if (!HasHeaders(headers, data.Message, "skills", "employeenumber", "firstname", "lastname", "dateofbirth", "skillname"))
         {
-            if (!headers.ContainsKey(h))
-            {
-                data.HasIssue = true;
-                data.Message.Add($"The header {h} is missing from skills file. Importing stopped");
-            }
-        }
-        
-        if (data.HasIssue)
             return data;
+        }
 
         var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
 
