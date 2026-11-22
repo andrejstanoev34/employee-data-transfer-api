@@ -16,15 +16,15 @@ public class ImportController : ControllerBase
         _importService = importService;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> ImportData(List<IFormFile>? files)
+    [HttpPost("/{id}")]
+    public async Task<IActionResult> ImportData(List<IFormFile>? files, [FromRoute] Guid organisationId)
     {
         if (files == null || files.Count == 0)
         {
             return BadRequest("No Files Uploaded");
         }
         
-        await _importService.ImportData(files);
+        await _importService.ImportData(files, organisationId);
         
         return Ok();
         

@@ -267,7 +267,7 @@ namespace EmployeeDataImporterApi.Domain.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
-                    b.Property<Guid>("OfficeId")
+                    b.Property<Guid?>("OfficeId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("OrganisationId")
@@ -387,6 +387,9 @@ namespace EmployeeDataImporterApi.Domain.Migrations
                     b.Property<string>("EmployeeNumber")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("FileType")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("ImportRunId")
                         .HasColumnType("uuid");
@@ -863,8 +866,7 @@ namespace EmployeeDataImporterApi.Domain.Migrations
                     b.HasOne("EmployeeDataImporterApi.Domain.Models.Office", "Office")
                         .WithMany("Employees")
                         .HasForeignKey("OfficeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("EmployeeDataImporterApi.Domain.Models.Organisation", "Organisation")
                         .WithMany("Employees")

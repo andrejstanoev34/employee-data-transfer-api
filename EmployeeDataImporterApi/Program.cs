@@ -19,6 +19,8 @@ builder.Services.AddScoped<IEmployeeFileReader, ExcelEmployeeFileReader>();
 builder.Services.AddScoped<IEmployeeFileReader, CsvEmployeeFileReader>();
 builder.Services.AddScoped<EmployeeFileReaderFactory>();
 builder.Services.AddScoped<ImportService>();
+builder.Services.AddScoped<EmployeeValidator>();
+builder.Services.AddScoped<SkillValidator>();
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

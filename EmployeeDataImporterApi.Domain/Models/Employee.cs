@@ -28,7 +28,7 @@ public class Employee: BaseEntity
     public Guid DepartmentId {get; set;}
     public Department? Department {get; set;}
     
-    public Guid OfficeId {get; set;}
+    public Guid? OfficeId {get; set;}
     public Office? Office {get; set;}
     
     public Guid OrganisationId {get; set;}

@@ -12,7 +12,7 @@ public class ImportService
         _fileReaderFactory = fileReaderFactory;
     }
 
-    public async Task<string> ImportData(List<IFormFile> files)
+    public async Task<string> ImportData(List<IFormFile> files, Guid organisationId)
     {
         var extension = Path.GetExtension(files.First().FileName);
         var employeeFileReader = _fileReaderFactory.GetFileReader(extension);

@@ -12,5 +12,7 @@ public class ImportRowResult: BaseEntity
     public Guid ImportRunId { get; set; }
     public ImportRun? ImportRun { get; set; }
     
+    public FileType FileType { get; set; }
+    
     public List<ImportRowError> Errors { get; set; } = new List<ImportRowError>();
 }

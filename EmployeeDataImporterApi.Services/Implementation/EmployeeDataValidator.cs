@@ -1,120 +1,102 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
 using EmployeeDataImporterApi.Domain.Dto;
 using EmployeeDataImporterApi.Domain.Enums;
 using EmployeeDataImporterApi.Domain.Models;
 using EmployeeDataImporterApi.Repository;
+using EmployeeDataImporterApi.Domain.Common;
 
 namespace EmployeeDataImporterApi.Services.Implementation;
 
 public class EmployeeDataValidator
 {
-    
     private readonly Repository<Employee> _employeeRepository;
-
-    public EmployeeDataValidator(Repository<Employee> employeeRepository)
+    private readonly Repository<Role> _roleRepository;
+    private readonly Repository<Department> _departmentRepository;
+    private readonly Repository<Office> _officeRepository;
+    private readonly Repository<Skill> _skillRepository;
+    private readonly EmployeeValidator _employeeValidator;
+    private readonly SkillValidator _skillValidator;
+    
+    public EmployeeDataValidator(Repository<Employee> employeeRepository, Repository<Role> roleRepository, Repository<Department> departmentRepository, Repository<Office> officeRepository, Repository<Skill> skillRepository, EmployeeValidator employeeValidator, SkillValidator skillValidator)
     {
         _employeeRepository = employeeRepository;
+        _roleRepository = roleRepository;
+        _departmentRepository = departmentRepository;
+        _officeRepository = officeRepository;
+        _skillRepository = skillRepository;
+        _employeeValidator = employeeValidator;
+        _skillValidator = skillValidator;
     }
     
-    // treba da prima Organisation Id kako parametar funkcijata
-    public async Task<string> ValidateAsync(ImportedData importedData)
+    public async Task<ValidationOutcome> ValidateAsync(ImportedData importedData, Guid organisationId)
     {
-        var employees = await _employeeRepository.GetAllAsync(selector: x => x);
-        //treba filter po organisation ID da se dodade
-        var employeeNumbers = (await _employeeRepository.GetAllAsync(selector: x => x.EmployeeNumber)).ToList();
-        var emails = (await _employeeRepository.GetAllAsync(selector:x=>x.Email) ).ToList();
+        var refData = await LoadReferenceDataAsync(organisationId);
+        var rows = _employeeValidator.ValidateEmployees(importedData.ImportedEmployeesData, refData);
         
-        var importRun = new ImportRun();
-        
-        var employeeRows = importedData.ImportedEmployeesData.ImportedEmployees;
-        
-        foreach (var row in employeeRows)
+        var res = rows
+            .Where(r => r.Employee != null)
+            .Select(r => r.Employee);
+
+        foreach (var e in res)
         {
-            var rowResult = new ImportRowResult();
-            rowResult.RowNumber = row.RowNumber;
-            
-            CheckRequiredField(row.EmployeeNumber, "EmployeeNumber", "Employee number is required", rowResult.Errors);
-            CheckRequiredField(row.FirstName, "FirstName", "First name is required", rowResult.Errors);
-            CheckRequiredField(row.LastName, "LastName", "Last name is required", rowResult.Errors);
-            CheckRequiredField(row.Email, "Email", "Email is required", rowResult.Errors);
-            CheckRequiredField(row.HireDate, "HireDate", "HireDate is required", rowResult.Errors);
-            CheckRequiredField(row.DepartmentCode, "DepartmentCode", "DepartmentCode is required", rowResult.Errors);
-            CheckRequiredField(row.RoleTitle, "RoleTitle", "RoleTitle is required", rowResult.Errors);
-            
-            rowResult.EmployeeNumber = row.EmployeeNumber;
-            
-            if (rowResult.Errors.Any(e => e.ErrorType.Equals(ErrorType.MissingRequiredField)))
+            refData.EmployeeByNumber.Add(e!.EmployeeNumber,e);
+            if (e.DateOfBirth != null)
             {
-                rowResult.Status = ImportStatus.Skipped;
-                importRun.ImportRowResults.Add(rowResult);
-                continue;
-            }
+                string key = $"{e.FirstName}|{e.LastName}|{e.DateOfBirth.Value:yyyy-MM-dd}";
 
-            if (employeeNumbers.Contains(row.EmployeeNumber!))
-            {
-                rowResult.Status = ImportStatus.Skipped;
-                rowResult.Errors.Add(new ImportRowError()
+                if (!refData.EmployeeByNameSurnameDob.TryGetValue(key, out List<Employee>? employeeList))
                 {
-                    Id = new Guid(),
-                    Field = "EmployeeNumber",
-                    ErrorType = ErrorType.DuplicateEmployeeNumber,
-                    Message = "Employee number already exists in this company.",
-                    Value = row.EmployeeNumber!
-                });
-                importRun.ImportRowResults.Add(rowResult);
+                    employeeList = new List<Employee>();
+                    refData.EmployeeByNameSurnameDob[key] = employeeList;
+                }
+                employeeList.Add(e);
             }
-
-            if (emails.Contains(row.Email!))
-            {
-                rowResult.Status = ImportStatus.Skipped;
-                rowResult.Errors.Add(new ImportRowError()
-                {
-                    Id = new Guid(),
-                    Field = "Email",
-                    ErrorType = ErrorType.DuplicateEmail,
-                    Message = "Email already exists.",
-                    Value = row.EmployeeNumber!
-                });
-                importRun.ImportRowResults.Add(rowResult);
-            }
-            
-            if (rowResult.Errors.Any(e => e.ErrorType.Equals(ErrorType.DuplicateEmail) || e.ErrorType.Equals(ErrorType.DuplicateEmployeeNumber)))
-            {
-                continue;
-            }
-            
-            
-            
-            var employee = new Employee();
-            employee.EmployeeNumber = row.EmployeeNumber!;
-            employee.FirstName = row.FirstName!;
-            employee.LastName = row.LastName!;
-            employee.Email = row.Email!;
-            employee.HireDate = GetDate(row.HireDate!);
-            
         }
+        
+        var skillsRows = _skillValidator.ValidateSkills(importedData.ImportedSkillsData, refData);
 
-        return "";
-    }
-
-    private void CheckRequiredField(string? value, string fieldName, string message, List<ImportRowError> errors)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            var importError = new ImportRowError()
-            {
-                Id = new Guid(),
-                Field = fieldName,
-                Message = message,
-                Value = "null",
-                ErrorType = ErrorType.MissingRequiredField
-            };
-            errors.Add(importError);
-        }
-    }
-
-    private DateOnly GetDate(string date)
-    {
-        return DateOnly.Parse(date);
+        return new ValidationOutcome { Rows = rows };
     }
     
+    
+    private async Task<ReferenceData> LoadReferenceDataAsync(Guid organisationId)
+    {
+        var roles = await _roleRepository.GetAllAsync(selector: r => new { r.Title, r.Id });
+        var departments = await _departmentRepository.GetAllAsync(
+            selector: d => new { d.Code, d.Id }, predicate: d => d.OrganisationId == organisationId);
+        var offices = await _officeRepository.GetAllAsync(
+            selector: o => new { o.City, o.Id }, predicate: o => o.OrganisationId == organisationId);
+        var numbers = await _employeeRepository.GetAllAsync(
+            selector: e => e.EmployeeNumber, predicate: e => e.OrganisationId == organisationId);
+        var emails = await _employeeRepository.GetAllAsync(selector: e => e.Email);
+        var skills = await _skillRepository.GetAllAsync(
+            selector: x => x
+        );
+        var employees = await _employeeRepository.GetAllAsync(
+            selector:x=>x, predicate:x=>x.OrganisationId == organisationId);
+
+        return new ReferenceData
+        {
+            OrganisationId = organisationId,
+            RolesByTitle = roles.ToDictionary(r => Util.NormalizeTitle(r.Title), r => r.Id, StringComparer.OrdinalIgnoreCase),
+            DepartmentsByCode = departments.ToDictionary(d => d.Code.Trim(), d => d.Id, StringComparer.OrdinalIgnoreCase),
+            OfficesByCity = offices.ToDictionary(o => o.City.Trim(), o => o.Id, StringComparer.OrdinalIgnoreCase),
+            SkillsByName = skills.ToDictionary(s=>s.Name.Trim(), s=>s, StringComparer.OrdinalIgnoreCase),
+            EmployeeByNumber = employees.ToDictionary(e=>e.EmployeeNumber,e=>e, StringComparer.OrdinalIgnoreCase),
+            EmployeeByNameSurnameDob = employees
+                .Where(e => e.DateOfBirth != null)
+                .GroupBy(
+                    e => $"{e.FirstName}|{e.LastName}|{e.DateOfBirth!.Value:yyyy-MM-dd}",
+                    StringComparer.OrdinalIgnoreCase
+                )
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.ToList(),
+                    StringComparer.OrdinalIgnoreCase
+                ),
+            TakenEmployeeNumbers = numbers.ToHashSet(StringComparer.OrdinalIgnoreCase),
+            TakenEmails = emails.ToHashSet(StringComparer.OrdinalIgnoreCase)
+        };
+    }
 }
