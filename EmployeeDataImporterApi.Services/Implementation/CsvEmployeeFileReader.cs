@@ -1,6 +1,7 @@
 using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
+using EmployeeDataImporterApi.Domain.Common;
 using EmployeeDataImporterApi.Domain.Dto;
 using EmployeeDataImporterApi.Services.Interface;
 
@@ -59,7 +60,7 @@ public class CsvEmployeeFileReader : IEmployeeFileReader
                 Notes = Get(csv, "notes")            
             };
 
-            if (IsEmpty(emp)) continue;
+            if (Util.IsEmpty(emp)) continue;
             data.ImportedEmployees.Add(emp);
         }
         data.TotalEmployeeRows = data.ImportedEmployees.Count;
@@ -129,9 +130,4 @@ public class CsvEmployeeFileReader : IEmployeeFileReader
         value = value?.Trim();
         return string.IsNullOrEmpty(value) ? null : value;
     }
-    
-    private static bool IsEmpty(ImportedEmployee e) =>
-        new[] { e.EmployeeNumber, e.FirstName, e.LastName, e.Email, e.DateOfBirth,
-            e.HireDate, e.DepartmentCode, e.RoleTitle, e.OfficeCity, e.Salary,
-            e.Phone, e.ManagerEmployeeNumber }.All(v => v == null);
 }

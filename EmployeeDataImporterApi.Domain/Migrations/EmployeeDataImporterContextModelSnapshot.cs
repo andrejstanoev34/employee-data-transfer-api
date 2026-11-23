@@ -817,6 +817,38 @@ namespace EmployeeDataImporterApi.Domain.Migrations
                             IsDeleted = false,
                             Name = "Driving",
                             UpdatedAt = new DateTime(2026, 11, 18, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000001-0000-4000-8000-000000000015"),
+                            CreatedAt = new DateTime(2026, 11, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            Name = "Security",
+                            UpdatedAt = new DateTime(2026, 11, 18, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000001-0000-4000-8000-000000000016"),
+                            CreatedAt = new DateTime(2026, 11, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            Name = "Logistics Planning",
+                            UpdatedAt = new DateTime(2026, 11, 18, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000001-0000-4000-8000-000000000017"),
+                            CreatedAt = new DateTime(2026, 11, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            Name = "Whiskey Tasting",
+                            UpdatedAt = new DateTime(2026, 11, 18, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000001-0000-4000-8000-000000000018"),
+                            CreatedAt = new DateTime(2026, 11, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDeleted = false,
+                            Name = "Horse Racing",
+                            UpdatedAt = new DateTime(2026, 11, 18, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 

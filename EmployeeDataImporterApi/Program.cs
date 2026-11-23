@@ -1,5 +1,5 @@
+using System.Text.Json.Serialization;
 using EmployeeDataImporterApi.Domain;
-using EmployeeDataImporterApi.Domain.Common;
 using EmployeeDataImporterApi.Middleware;
 using EmployeeDataImporterApi.Repository;
 using EmployeeDataImporterApi.Services.Implementation;
@@ -21,7 +21,13 @@ builder.Services.AddScoped<EmployeeFileReaderFactory>();
 builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<EmployeeValidator>();
 builder.Services.AddScoped<SkillValidator>();
-builder.Services.AddControllers();
+builder.Services.AddScoped<EmployeeDataValidator>();
+builder.Services.AddScoped<ExcelExportService>();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 

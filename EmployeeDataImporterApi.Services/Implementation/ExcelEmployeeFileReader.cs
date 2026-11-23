@@ -1,5 +1,6 @@
 using System.Globalization;
 using ClosedXML.Excel;
+using EmployeeDataImporterApi.Domain.Common;
 using EmployeeDataImporterApi.Domain.Dto;
 using EmployeeDataImporterApi.Services.Interface;
 
@@ -93,11 +94,13 @@ public class ExcelEmployeeFileReader : IEmployeeFileReader
                 ManagerEmployeeNumber = managerEmployeeNumber,
                 Notes = notes
             };
+            if(Util.IsEmpty(emp)) continue;
+            
             data.ImportedEmployees.Add(emp);
-            //"employeenumber", "firstname", "lastname", "email", "dateofbirth", "hiredate", "departmentcode", "roletitle", "officecity", "salary", "phone", "manageremployeenumber", "notes" }
+            
         }
 
-        data.TotalEmployeeRows = lastRow - 1;
+        data.TotalEmployeeRows = data.ImportedEmployees.Count;
         
         return data;
     }

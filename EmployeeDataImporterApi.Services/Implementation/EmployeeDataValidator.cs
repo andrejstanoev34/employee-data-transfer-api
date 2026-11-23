@@ -5,6 +5,7 @@ using EmployeeDataImporterApi.Domain.Enums;
 using EmployeeDataImporterApi.Domain.Models;
 using EmployeeDataImporterApi.Repository;
 using EmployeeDataImporterApi.Domain.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeDataImporterApi.Services.Implementation;
 
@@ -15,10 +16,12 @@ public class EmployeeDataValidator
     private readonly Repository<Department> _departmentRepository;
     private readonly Repository<Office> _officeRepository;
     private readonly Repository<Skill> _skillRepository;
+    private readonly Repository<EmployeeSkill> _employeeSkillRepository;
     private readonly EmployeeValidator _employeeValidator;
     private readonly SkillValidator _skillValidator;
     
-    public EmployeeDataValidator(Repository<Employee> employeeRepository, Repository<Role> roleRepository, Repository<Department> departmentRepository, Repository<Office> officeRepository, Repository<Skill> skillRepository, EmployeeValidator employeeValidator, SkillValidator skillValidator)
+    
+    public EmployeeDataValidator(Repository<Employee> employeeRepository, Repository<Role> roleRepository, Repository<Department> departmentRepository, Repository<Office> officeRepository, Repository<Skill> skillRepository, EmployeeValidator employeeValidator, SkillValidator skillValidator, Repository<EmployeeSkill> employeeSkillRepository)
     {
         _employeeRepository = employeeRepository;
         _roleRepository = roleRepository;
@@ -27,6 +30,7 @@ public class EmployeeDataValidator
         _skillRepository = skillRepository;
         _employeeValidator = employeeValidator;
         _skillValidator = skillValidator;
+        _employeeSkillRepository = employeeSkillRepository;
     }
     
     public async Task<ValidationOutcome> ValidateAsync(ImportedData importedData, Guid organisationId)
@@ -37,6 +41,8 @@ public class EmployeeDataValidator
         var res = rows
             .Where(r => r.Employee != null)
             .Select(r => r.Employee);
+        
+        var skippedEmployees = rows.Where(r => r.Employee == null).ToList();
 
         foreach (var e in res)
         {
@@ -55,8 +61,33 @@ public class EmployeeDataValidator
         }
         
         var skillsRows = _skillValidator.ValidateSkills(importedData.ImportedSkillsData, refData);
-
-        return new ValidationOutcome { Rows = rows };
+        
+        // proverka dali employeeNumber - SkillId vekje postoe
+        var skillRes = skillsRows.Where(r => r.EmployeeSkill != null).ToList();
+        var skipped = skillsRows.Where(r => r.EmployeeSkill == null).ToList();
+        foreach (var r in skillRes)
+        {
+            EmployeeSkill employeeSkill = r.EmployeeSkill;
+            if (refData.EmployeeSkills.ContainsKey((employeeSkill.Employee.EmployeeNumber, employeeSkill.SkillId)))
+            {
+                r.Result.Status = ImportStatus.Skipped;
+                r.Result.Errors.Add( new ImportRowError()
+                {
+                    Field = "",
+                    Message = $"The combination {employeeSkill.Employee.EmployeeNumber} | {employeeSkill.SkillId} already exists.",
+                    Value = "",
+                    ErrorType = ErrorType.DuplicateSkillEmployeeNumber
+                } );
+                // i treba EmployeeSkill da go stajme na null
+                r.EmployeeSkill = null;
+            }
+            else
+            {
+                refData.EmployeeSkills.Add((employeeSkill.Employee.EmployeeNumber, employeeSkill.SkillId), employeeSkill);
+            }
+        }
+        
+        return new ValidationOutcome { EmployeeRows = rows, SkillRows = skillsRows };
     }
     
     
@@ -75,6 +106,11 @@ public class EmployeeDataValidator
         );
         var employees = await _employeeRepository.GetAllAsync(
             selector:x=>x, predicate:x=>x.OrganisationId == organisationId);
+        var employeeSkills = await _employeeSkillRepository.GetAllAsync(
+            selector: x => x,
+            predicate: x => x.Employee.OrganisationId == organisationId,
+            include: x => x.Include(e => e.Employee)
+        );
 
         return new ReferenceData
         {
@@ -96,7 +132,8 @@ public class EmployeeDataValidator
                     StringComparer.OrdinalIgnoreCase
                 ),
             TakenEmployeeNumbers = numbers.ToHashSet(StringComparer.OrdinalIgnoreCase),
-            TakenEmails = emails.ToHashSet(StringComparer.OrdinalIgnoreCase)
+            TakenEmails = emails.ToHashSet(StringComparer.OrdinalIgnoreCase),
+            EmployeeSkills = employeeSkills.ToDictionary(es=>(es.Employee.EmployeeNumber, es.SkillId), es=>es)
         };
     }
 }

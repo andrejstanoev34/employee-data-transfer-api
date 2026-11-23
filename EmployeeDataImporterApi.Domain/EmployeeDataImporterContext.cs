@@ -41,4 +41,52 @@ public class EmployeeDataImporterContext: DbContext
         }
         base.OnModelCreating(modelBuilder);
     }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
+    {
+        ChangeTracker.DetectChanges();
+        
+        var addedEntities = ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Added)
+            .Select(e => e.Entity)
+            .ToList();
+
+        foreach (var entity in addedEntities)
+        {
+            if (entity is BaseEntity entityBase)
+            {
+                entityBase.CreatedAt = DateTime.UtcNow;
+                entityBase.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+        
+        var updatedEntities = ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Modified)
+            .Select(e=>e.Entity)
+            .ToList();
+
+        foreach (var entity in updatedEntities)
+        {
+            if (entity is BaseEntity entityBase)
+            {
+                entityBase.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+        
+        var deletedEntities = ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Deleted && e.Entity is BaseEntity)
+            .ToList();
+
+        foreach (var entity in deletedEntities)
+        {
+            entity.State = EntityState.Modified;
+            if (entity.Entity is BaseEntity entityBaseEntity)
+            {
+                entityBaseEntity.UpdatedAt = DateTime.UtcNow;
+                entityBaseEntity.IsDeleted = true;
+            }
+        }
+        
+        return base.SaveChangesAsync(cancellationToken);
+    }
 }

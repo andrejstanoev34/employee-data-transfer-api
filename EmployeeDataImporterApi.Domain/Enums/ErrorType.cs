@@ -20,4 +20,6 @@ public enum ErrorType
     InvalidSkillName,
     InvalidEmployeeNumber,
     MissingSkillNameField,
+    SkillEmployeeAmbiguous,
+    DuplicateSkillEmployeeNumber,
 }

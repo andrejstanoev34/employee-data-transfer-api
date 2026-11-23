@@ -103,6 +103,26 @@ public class SkillConfiguration : IEntityTypeConfiguration<Skill>
                 Id = Guid.Parse("a1000001-0000-4000-8000-000000000014"), Name = "Driving", IsDeleted = false,
                 CreatedAt = SeedData.SeedDate,
                 UpdatedAt = SeedData.SeedDate
+            },
+            new Skill
+            {
+                Id = Guid.Parse("a1000001-0000-4000-8000-000000000015"), Name = "Security", IsDeleted = false,
+                CreatedAt = SeedData.SeedDate, UpdatedAt = SeedData.SeedDate
+            },
+            new Skill
+            {
+                Id = Guid.Parse("a1000001-0000-4000-8000-000000000016"), Name = "Logistics Planning", IsDeleted = false,
+                CreatedAt = SeedData.SeedDate, UpdatedAt = SeedData.SeedDate
+            },
+            new Skill
+            {
+                Id = Guid.Parse("a1000001-0000-4000-8000-000000000017"), Name = "Whiskey Tasting", IsDeleted = false,
+                CreatedAt = SeedData.SeedDate, UpdatedAt = SeedData.SeedDate
+            },
+            new Skill
+            {
+                Id = Guid.Parse("a1000001-0000-4000-8000-000000000018"), Name = "Horse Racing", IsDeleted = false,
+                CreatedAt = SeedData.SeedDate, UpdatedAt = SeedData.SeedDate
             }
         };
 

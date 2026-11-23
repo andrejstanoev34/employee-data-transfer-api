@@ -12,6 +12,7 @@ public class ReferenceData
     public Dictionary<string, Skill> SkillsByName { get; init; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string, Employee> EmployeeByNumber { get; init; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string, List<Employee>> EmployeeByNameSurnameDob { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<(string, Guid),EmployeeSkill> EmployeeSkills { get; init; } = new();
     public HashSet<string> TakenEmployeeNumbers { get; init; } = new(StringComparer.OrdinalIgnoreCase);
     public HashSet<string> TakenEmails { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 }

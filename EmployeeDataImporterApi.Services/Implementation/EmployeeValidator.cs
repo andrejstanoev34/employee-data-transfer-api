@@ -180,7 +180,6 @@ public class EmployeeValidator
                 r => accepted[r.ManagerEmployeeNumber!].Employee!.EmployeeNumber);
 
         var visited = new HashSet<string>();
-        var onPath = new HashSet<string>();
         var inCycle = new HashSet<string>();
 
         foreach (var start in managerOf.Keys)

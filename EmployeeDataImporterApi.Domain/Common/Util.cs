@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using EmployeeDataImporterApi.Domain.Dto;
 using EmployeeDataImporterApi.Domain.Enums;
 
 namespace EmployeeDataImporterApi.Domain.Common;
@@ -47,4 +48,9 @@ public static class Util
         var digits = phone.Count(char.IsDigit);
         return digits is >= 7 and <= 15;
     }
+
+    public static bool IsEmpty(ImportedEmployee e) =>
+        new[] { e.EmployeeNumber, e.FirstName, e.LastName, e.Email, e.DateOfBirth,
+            e.HireDate, e.DepartmentCode, e.RoleTitle, e.OfficeCity, e.Salary,
+            e.Phone, e.ManagerEmployeeNumber }.All(v => v == null);
 }
