@@ -75,12 +75,13 @@ public class ExcelExportService
             rowNumber++;
         }
         ConfigureWorksheet(importRunResultsWs);
+        
         // Third worksheet
         var importRunResultsIssuesWs = workBook.Worksheets.Add("ImportRunResultsIssues");
 
         var importRunResultsIssuesHeaders = new[]
         {
-            "ImportRowErrorId", "ImportRowResultId", "RowNumber", "EmployeeNumber", "RowStatus", "Field", "Message", "Value", "ErrorType"
+            "ImportRowErrorId", "ImportRowResultId", "FileType", "RowNumber", "EmployeeNumber", "RowStatus", "Field", "Message", "Value", "ErrorType"
         };
 
         ConfigureHeaders(importRunResultsIssuesWs, importRunResultsIssuesHeaders);
@@ -90,6 +91,7 @@ public class ExcelExportService
         var importRunIssues = importRun.ImportRowResults.SelectMany(irr => irr.Issues, (result, error) => new
         {
             RowNumber = result.RowNumber,
+            result.FileType,
             EmployeeNumber = result.EmployeeNumber,
             RowStatus = result.RowStatus.ToString(),
             Issue = error
@@ -101,13 +103,14 @@ public class ExcelExportService
         {
             importRunResultsIssuesWs.Cell(issueRowNumber, 1).Value = i.Issue.Id.ToString();
             importRunResultsIssuesWs.Cell(issueRowNumber, 2).Value = i.Issue.ImportRowResultId.ToString();
-            importRunResultsIssuesWs.Cell(issueRowNumber, 3).Value = i.RowNumber;
-            importRunResultsIssuesWs.Cell(issueRowNumber, 4).Value = i.EmployeeNumber;
-            importRunResultsIssuesWs.Cell(issueRowNumber, 5).Value = i.RowStatus;
-            importRunResultsIssuesWs.Cell(issueRowNumber, 6).Value = i.Issue.Field;
-            importRunResultsIssuesWs.Cell(issueRowNumber, 7).Value = i.Issue.Message;
-            importRunResultsIssuesWs.Cell(issueRowNumber, 8).Value = i.Issue.Value;
-            importRunResultsIssuesWs.Cell(issueRowNumber, 9).Value = i.Issue.IssueType.ToString();
+            importRunResultsIssuesWs.Cell(issueRowNumber, 3).Value = i.FileType.ToString();
+            importRunResultsIssuesWs.Cell(issueRowNumber, 4).Value = i.RowNumber;
+            importRunResultsIssuesWs.Cell(issueRowNumber, 5).Value = i.EmployeeNumber;
+            importRunResultsIssuesWs.Cell(issueRowNumber, 6).Value = i.RowStatus;
+            importRunResultsIssuesWs.Cell(issueRowNumber, 7).Value = i.Issue.Field;
+            importRunResultsIssuesWs.Cell(issueRowNumber, 8).Value = i.Issue.Message;
+            importRunResultsIssuesWs.Cell(issueRowNumber, 9).Value = i.Issue.Value;
+            importRunResultsIssuesWs.Cell(issueRowNumber, 10).Value = i.Issue.IssueType.ToString();
             
             issueRowNumber++;
         }

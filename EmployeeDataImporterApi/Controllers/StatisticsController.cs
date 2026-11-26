@@ -50,5 +50,17 @@ public class StatisticsController : ControllerBase
         var tenureCohorts = await _statisticsQueries.TenureCohorts();
         return Ok(tenureCohorts);
     }
+
+    [HttpGet("runDifference/{organisationId}")]
+    public async Task<IActionResult> GetRunDifference([FromRoute]Guid organisationId, [FromQuery]Guid run1, [FromQuery]Guid run2)
+    {
+        if (run1 == run2)
+        {
+            return BadRequest("Please pass different import runs");
+        }
+        
+        var differenceDto = await _statisticsQueries.RunDiff(organisationId, run1, run2);
+        return Ok(differenceDto);
+    }
     
 }

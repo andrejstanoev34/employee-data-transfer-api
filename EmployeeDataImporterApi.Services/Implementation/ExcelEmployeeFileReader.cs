@@ -42,22 +42,19 @@ public class ExcelEmployeeFileReader : FileReaderBase
         {
             ReadEmployees(worksheet, data.ImportedEmployeesData);
         }
-        else
+        else if (HasHeaders(headers.Keys.ToHashSet(), data.Messages, "skills", "employeenumber", "firstname", "lastname", "dateofbirth", "skillname"))
         {
             ReadSkills(worksheet, data.ImportedSkillsData);
+        }
+        else
+        {
+            data.AddMessage("File does not have the correct format");
         }
     }
 
     private void ReadEmployees(IXLWorksheet worksheet, ImportedEmployeesData data)
     {
         var headers = GetHeaders(worksheet);
-
-        if (!HasHeaders(headers.Keys.ToHashSet(), data.Message, "employees", "employeenumber", "firstname", "lastname", "email",
-                "dateofbirth", "hiredate", "departmentcode", "roletitle", "officecity", "salary", "phone",
-                "manageremployeenumber", "notes"))
-        {
-            return;
-        }
 
         var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
 

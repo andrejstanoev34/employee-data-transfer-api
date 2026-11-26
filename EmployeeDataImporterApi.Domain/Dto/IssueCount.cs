@@ -2,8 +2,8 @@ using EmployeeDataImporterApi.Domain.Enums;
 
 namespace EmployeeDataImporterApi.Domain.Dto;
 
-public class ErrorCount
+public class IssueCount
 {
-    public String ErrorType { get; set; }
+    public String IssueType { get; set; }
     public int Count { get; set; }
 }

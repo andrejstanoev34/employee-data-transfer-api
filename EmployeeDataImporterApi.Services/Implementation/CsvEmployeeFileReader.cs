@@ -10,35 +10,40 @@ public class CsvEmployeeFileReader : FileReaderBase
 {
     public override void ReadFile(Stream stream, ImportedData data, string fileName)
     {
-        if (fileName.Contains("employees"))
+        
+        using var csv = CreateCsv(stream);
+        if (!csv.Read() || !csv.ReadHeader())
         {
-            ReadEmployees(stream, data.ImportedEmployeesData);
+            data.Messages.Add("Empty file");
+            return;   
+        }
+        
+        var presentHeaders = csv.HeaderRecord!.Select(h => h.Trim().ToLower()).ToHashSet();
+        
+
+        if (HasHeaders(presentHeaders, data.Messages, "skills",
+                "employeenumber", "firstname", "lastname", "email", "dateofbirth",
+                "hiredate", "departmentcode", "roletitle", "officecity", "salary",
+                "phone", "manageremployeenumber"))
+        {
+            ReadEmployees(csv, data.ImportedEmployeesData);
+        }
+        else if(HasHeaders(presentHeaders, data.Messages, "skills",
+                    "employeenumber", "firstname", "lastname", "dateofbirth", "skillname"))
+        {
+            ReadSkills(csv, data.ImportedSkillsData);
         }
         else
         {
-            ReadSkills(stream, data.ImportedSkillsData);
+            data.Messages.Add($"The file {fileName} does not contain the right headers");
         }
     }
 
     public override bool CanReadFile(string extension) =>
         extension.Equals(".csv", StringComparison.OrdinalIgnoreCase);
 
-    private void ReadEmployees(Stream stream, ImportedEmployeesData data)
+    private void ReadEmployees(CsvReader csv, ImportedEmployeesData data)
     {
-        using var csv = CreateCsv(stream);
-
-        if (!csv.Read() || !csv.ReadHeader())
-        {
-            data.Message.Add("Empty employee file");
-            return;   
-        }
-        var present = csv.HeaderRecord!.Select(h => h.Trim().ToLower()).ToHashSet();
-        if (!HasHeaders(present, data.Message, "skills",
-                "employeenumber", "firstname", "lastname", "email", "dateofbirth",
-                "hiredate", "departmentcode", "roletitle", "officecity", "salary",
-                "phone", "manageremployeenumber"))
-            return;
-
         while (csv.Read())
         {
             string? employeeNumber = Get(csv, "employeenumber");
@@ -82,20 +87,8 @@ public class CsvEmployeeFileReader : FileReaderBase
         data.TotalEmployeeRows = data.ImportedEmployees.Count;
     }
     
-    private void ReadSkills(Stream stream, ImportedSkillsData data)
+    private void ReadSkills(CsvReader csv, ImportedSkillsData data)
     {
-        using var csv = CreateCsv(stream);
-
-        if (!csv.Read() || !csv.ReadHeader())
-        {
-            data.Message.Add("Empty skills file");
-            return;
-        }
-        var present = csv.HeaderRecord!.Select(h => h.Trim().ToLower()).ToHashSet();
-        if (!HasHeaders(present, data.Message, "skills",
-                "employeenumber", "firstname", "lastname", "dateofbirth", "skillname"))
-            return;
-
         while (csv.Read())
         {
             

@@ -37,7 +37,7 @@ public class StatisticsQueries
                         FirstName = e.FirstName,
                         LastName = e.LastName,
                         Salary = e.Salary!.Value,
-                    })
+                    }).ToList()
             }).ToList();
         
         // var queryString = departments.AsQueryable().ToQueryString();
@@ -106,24 +106,14 @@ public class StatisticsQueries
             .OrderBy(x=>x.DepartmentId).ThenBy(x=>x.Year)
             .ToList();
         
-        int runningTotal = 0;
-        
-        Guid nowDepId = countPerDepartmentPerYear.First().DepartmentId;
-        
         List<TenureCohortsDto> tenureCohortsDto = new List<TenureCohortsDto>();
+
+        var departmentRunningCount = countPerDepartmentPerYear.Select(o => o.DepartmentId).Distinct().ToDictionary(id => id, _ => 0);
         
         foreach (var o in countPerDepartmentPerYear)
         {
-            if (o.DepartmentId == nowDepId)
-            {
-                runningTotal += o.HireCount;
-                tenureCohortsDto.Add(TenureCohortsDto.Create(o.DepartmentId, o.DepartmentName, o.Year, o.HireCount, runningTotal));
-            }
-            else
-            {
-                nowDepId = o.DepartmentId;
-                runningTotal = o.HireCount;
-            }
+            departmentRunningCount[o.DepartmentId] += o.HireCount;
+            tenureCohortsDto.Add(TenureCohortsDto.Create(o.DepartmentId, o.DepartmentName, o.Year, o.HireCount, departmentRunningCount[o.DepartmentId]));
         }
         return tenureCohortsDto;
     }
@@ -136,18 +126,17 @@ public class StatisticsQueries
         if (runOneId == runTwoId || found != 2)
             throw new KeyNotFoundException("One or both import runs were not found for this organisation.");
 
-        var first = StatusPerEmployee(runOneId); 
-        
-        var second = StatusPerEmployee(runTwoId);
+        var first = FirstRowPerEmployee(runOneId);
+        var second = FirstRowPerEmployee(runTwoId);
 
         var newQuery = second
             .Where(b => !first.Any(a => a.EmployeeNumber == b.EmployeeNumber))
-            .Select(b => b.EmployeeNumber)
+            .Select(b => b.EmployeeNumber!)
             .OrderBy(n => n);
 
         var missingQuery = first
             .Where(a => !second.Any(b => b.EmployeeNumber == a.EmployeeNumber))
-            .Select(a => a.EmployeeNumber)
+            .Select(a => a.EmployeeNumber!)
             .OrderBy(n => n);
 
         var changedQuery = first
@@ -155,7 +144,7 @@ public class StatisticsQueries
                 second,
                 a => a.EmployeeNumber,
                 b => b.EmployeeNumber,
-                (a, b) => new { a.EmployeeNumber, Before = a.Status, After = b.Status })
+                (a, b) => new { a.EmployeeNumber, Before = a.RowStatus, After = b.RowStatus })
             .Where(x => x.Before != x.After)
             .OrderBy(x => x.EmployeeNumber);
 
@@ -174,14 +163,15 @@ public class StatisticsQueries
         };
     }
     
-    private IQueryable<EmployeeNumberStatus> StatusPerEmployee(Guid runId) =>
-        _context.Set<ImportRowResult>()
+    private IQueryable<ImportRowResult> FirstRowPerEmployee(Guid runId) =>
+        _context.ImportRowResults
             .Where(r => r.ImportRunId == runId
                         && r.FileType == FileType.Employee
                         && r.EmployeeNumber != null)
-            .GroupBy(r => r.EmployeeNumber!)
-            .Select(g => new EmployeeNumberStatus(
-                g.Key,
-                g.OrderBy(r => r.RowNumber).Select(r => r.RowStatus).First()));
+            .Where(r => r.RowNumber == _context.ImportRowResults
+                .Where(x => x.ImportRunId == runId
+                            && x.FileType == FileType.Employee
+                            && x.EmployeeNumber == r.EmployeeNumber)
+                .Min(x => x.RowNumber));
     
 }

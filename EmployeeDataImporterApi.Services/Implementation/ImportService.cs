@@ -16,6 +16,7 @@ public class ImportService
     private readonly Repository<Employee> _employeeRepository;
     private readonly Repository<EmployeeSkill> _employeeSkillRepository;
     private readonly Repository<ImportRun> _importRunRepository;
+    private readonly Repository<Organisation> _organisationRepository;
 
     public ImportService(EmployeeFileReaderFactory fileReaderFactory, EmployeeDataValidator employeeDataValidator, Repository<Employee> employeeRepository, Repository<EmployeeSkill> employeeSkillRepository, Repository<ImportRun> importRunRepository, Repository<Organisation> organisationRepository)
     {
@@ -24,14 +25,26 @@ public class ImportService
         _employeeRepository = employeeRepository;
         _employeeSkillRepository = employeeSkillRepository;
         _importRunRepository = importRunRepository;
+        _organisationRepository = organisationRepository;
     }
 
     public async Task<ImportRunDto> ImportData(List<IFormFile> files, Guid organisationId)
     {
+        var organisation = await _organisationRepository.GetAsync(
+            selector: x => x,
+            predicate: x => x.Id == organisationId
+        );
+
+        if (organisation == null)
+        {
+            throw new ArgumentException($"Organisation with id {organisationId} not found");
+        }
+        
         var importRun = new ImportRun()
         {
             StartTime = DateTime.UtcNow,
             OrganisationId = organisationId,
+            Organisation = organisation,
         };
         var fileNames = new List<string>();
         var importedData = new ImportedData();
@@ -71,7 +84,7 @@ public class ImportService
         importRun.TotalRows = validationOutcome.Results.Count();
         importRun.ProcessedRows = newEmployees.Count + newSkillEmployee.Count;
         importRun.ImportRowResults = validationOutcome.Results.ToList();
-        importRun.FileName = string.Join("_", fileNames);
+        importRun.FileName = string.Join("  ", fileNames);
         importRun.Message = string.Join(", ", importedData.Messages);
         
         var newImportRun = await _importRunRepository.InsertAsync(importRun);
@@ -113,14 +126,14 @@ public class ImportService
             include: x => x.Include(i => i.Organisation).Include(i => i.ImportRowResults).ThenInclude(r => r.Issues)
         );
         
-        var errorCount = importRuns
+        var issueCount = importRuns
             .SelectMany(i=>i.ImportRowResults)
             .SelectMany(r=>r.Issues)
             .GroupBy(r=>r.IssueType)
             .OrderByDescending(g=>g.Count())
-            .Select(g=>new ErrorCount()
+            .Select(g=>new IssueCount()
             {
-                ErrorType = g.Key.ToString(),
+                IssueType = g.Key.ToString(),
                 Count = g.Count()
             })
             .ToList();
@@ -140,7 +153,7 @@ public class ImportService
         
         return new ImportStatsDto()
         {
-            ErrorCounts = errorCount,
+            IssueCounts = issueCount,
             OrganisationSkippedPartial = numSkippedAndPartial
         };
     }

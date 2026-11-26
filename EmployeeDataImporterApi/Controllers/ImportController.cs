@@ -25,12 +25,12 @@ public class ImportController : ControllerBase
         return Ok(allImportRuns);
     }
 
-    [HttpGet("{organisationId}")]
-    public async Task<IActionResult> GetImportRunById([FromRoute] Guid organisationId)
+    [HttpGet("{importRunId}")]
+    public async Task<IActionResult> GetImportRunById([FromRoute] Guid importRunId)
     {
         try
         {
-            var importRunDto = await _importService.GetImportRunById(organisationId);
+            var importRunDto = await _importService.GetImportRunById(importRunId);
             return Ok(importRunDto);
 
         }
@@ -49,10 +49,19 @@ public class ImportController : ControllerBase
         {
             return BadRequest("No Files Uploaded");
         }
+
+        try
+        {
+            var importRunDto = await _importService.ImportData(files, organisationId);
+            return Ok(importRunDto);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
         
-        var importRunDto = await _importService.ImportData(files, organisationId);
         
-        return Ok(importRunDto);
+        
     }
 
     [HttpGet("{importRunId}/report")]
@@ -68,9 +77,8 @@ public class ImportController : ControllerBase
         }
         catch (Exception e)
         {
-            BadRequest(e.Message);
+            return BadRequest(e.Message);
         }
-        return Ok();
     }
 
     [HttpGet("stats")]
