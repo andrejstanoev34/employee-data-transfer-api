@@ -19,7 +19,7 @@ public class ImportRowResultConfiguration : IEntityTypeConfiguration<ImportRowRe
             .HasMaxLength(100)       
             .IsRequired(false);
 
-        builder.Property(i => i.Status)
+        builder.Property(i => i.RowStatus)
             .HasConversion<string>();
         
         builder.HasOne(i=>i.ImportRun)

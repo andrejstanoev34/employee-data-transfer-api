@@ -12,7 +12,7 @@ public static class DtoConversion
             ImportId = importRun.Id,
             FileName = importRun.FileName,
             OrganisationName = importRun.Organisation.Name,
-            Status = importRun.Status.ToString(),
+            Status = importRun.RunStatus.ToString(),
             StartTime = importRun.StartTime,
             EndTime = importRun.EndTime,
             Message = importRun.Message,

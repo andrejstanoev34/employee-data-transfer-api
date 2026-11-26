@@ -3,8 +3,8 @@ using EmployeeDataImporterApi.Domain;
 using EmployeeDataImporterApi.Middleware;
 using EmployeeDataImporterApi.Repository;
 using EmployeeDataImporterApi.Services.Implementation;
-using EmployeeDataImporterApi.Services.Interface;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,16 +13,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<EmployeeDataImporterContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options
+        .LogTo(Console.WriteLine, [RelationalEventId.CommandExecuted], LogLevel.Information)
+        .EnableSensitiveDataLogging()
+        .EnableDetailedErrors();
 });
 builder.Services.AddScoped(typeof(Repository<>));
-builder.Services.AddScoped<IEmployeeFileReader, ExcelEmployeeFileReader>();
-builder.Services.AddScoped<IEmployeeFileReader, CsvEmployeeFileReader>();
+builder.Services.AddScoped<FileReaderBase, ExcelEmployeeFileReader>();
+builder.Services.AddScoped<FileReaderBase, CsvEmployeeFileReader>();
 builder.Services.AddScoped<EmployeeFileReaderFactory>();
 builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<EmployeeValidator>();
 builder.Services.AddScoped<SkillValidator>();
 builder.Services.AddScoped<EmployeeDataValidator>();
 builder.Services.AddScoped<ExcelExportService>();
+builder.Services.AddScoped<StatisticsQueries>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {

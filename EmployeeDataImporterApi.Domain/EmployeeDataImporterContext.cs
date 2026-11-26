@@ -11,7 +11,7 @@ public class EmployeeDataImporterContext: DbContext
     public DbSet<Department> Departments { get; set; }
     public DbSet<Employee> Employees { get; set; }
     public DbSet<EmployeeSkill> EmployeeSkills { get; set; }
-    public DbSet<ImportRowError> ImportRowErrors { get; set; }
+    public DbSet<ImportRowIssue> ImportRowErrors { get; set; }
     public DbSet<ImportRowResult> ImportRowResults { get; set; }
     public DbSet<ImportRun>  ImportRuns { get; set; }
     public DbSet<Office>  Offices { get; set; }
@@ -32,7 +32,6 @@ public class EmployeeDataImporterContext: DbContext
             if (!typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
                 continue;
 
-            // builds:  e => !e.IsDeleted
             var parameter = Expression.Parameter(entityType.ClrType, "e");
             var isDeleted = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
             var filter = Expression.Lambda(Expression.Not(isDeleted), parameter);

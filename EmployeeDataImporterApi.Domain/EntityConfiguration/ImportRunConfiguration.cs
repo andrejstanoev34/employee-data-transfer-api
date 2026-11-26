@@ -21,7 +21,7 @@ public class ImportRunConfiguration : IEntityTypeConfiguration<ImportRun>
 
         builder.Property(r => r.EndTime);
 
-        builder.Property(r => r.Status)
+        builder.Property(r => r.RunStatus)
             .HasConversion<string>()
             .HasMaxLength(50)
             .IsRequired();

@@ -25,7 +25,7 @@ public class SkillValidator
         {
             RowNumber = skillRow.RowNumber,
             FileType = FileType.Skill,
-            Status = ImportStatus.Skipped
+            RowStatus = ImportRowStatus.Skipped
         };
         var rowIssue = new RowIssues(rowResult);
 
@@ -40,21 +40,21 @@ public class SkillValidator
 
         if (skillName == null)
         {
-            rowIssue.Required("SkillName", ErrorType.MissingSkillNameField, "The skill name field is empty", "");
+            rowIssue.Required("SkillName", IssueType.MissingSkillNameField, "The skill name field is empty", "");
         }
         else if (!refData.SkillsByName.TryGetValue(skillName, out skill))
         {
-            rowIssue.Required("SkillName", ErrorType.InvalidSkillName, $"{skillName} does not exist", skillName);
+            rowIssue.Required("SkillName", IssueType.InvalidSkillName, $"{skillName} does not exist", skillName);
         }
         else if (employeeNumber != null)
         {
             if (!refData.EmployeeByNumber.TryGetValue(employeeNumber, out employee))
-                rowIssue.Required("EmployeeNumber", ErrorType.InvalidEmployeeNumber, $"{employeeNumber} does not exist",
+                rowIssue.Required("EmployeeNumber", IssueType.InvalidEmployeeNumber, $"{employeeNumber} does not exist",
                     employeeNumber);
         }
         else if (firstname == null || lastname == null || dateOfBirth == null)
         {
-            rowIssue.Required("FirstName, LastName, DateOfBirth", ErrorType.MissingRequiredField,
+            rowIssue.Required("FirstName, LastName, DateOfBirth", IssueType.MissingRequiredField,
                 "Some of the three fields are missing", "");
         }
         else
@@ -63,7 +63,7 @@ public class SkillValidator
 
             if (dob == null)
             {
-                rowIssue.Required("DateOfBirth", ErrorType.DateOfBirthInvalid, "Date of birth is not a valid date",
+                rowIssue.Required("DateOfBirth", IssueType.DateOfBirthInvalid, "Date of birth is not a valid date",
                     skillRow.DateOfBirth);
             }
             else
@@ -71,10 +71,10 @@ public class SkillValidator
                 var key = $"{firstname.ToLower()}|{lastname.ToLower()}|{dob.Value:yyyy-MM-dd}";
 
                 if (!refData.EmployeeByNameSurnameDob.TryGetValue(key, out var matches))
-                    rowIssue.Required("FirstName, LastName, DateOfBirth", ErrorType.InvalidEmployeeNumber,
+                    rowIssue.Required("FirstName, LastName, DateOfBirth", IssueType.InvalidEmployeeNumber,
                         $"Employee with credentials {firstname}, {lastname}, and {dateOfBirth} does not exist", "");
                 else if (matches.Count > 1)
-                    rowIssue.Required("FirstName, LastName, DateOfBirth", ErrorType.SkillEmployeeAmbiguous,
+                    rowIssue.Required("FirstName, LastName, DateOfBirth", IssueType.SkillEmployeeAmbiguous,
                         $"More than one employee matches {firstname}, {lastname}, and {dateOfBirth}", "");
                 else
                     employee = matches[0];
@@ -87,7 +87,7 @@ public class SkillValidator
         {
             employeeSkill = new EmployeeSkill { Employee = employee, SkillId = skill.Id };
             rowResult.EmployeeNumber = employee.EmployeeNumber;
-            rowResult.Status = ImportStatus.Imported;
+            rowResult.RowStatus = ImportRowStatus.Imported;
         }
 
         return new ValidatedSkillRow { Result = rowResult, EmployeeSkill = employeeSkill };

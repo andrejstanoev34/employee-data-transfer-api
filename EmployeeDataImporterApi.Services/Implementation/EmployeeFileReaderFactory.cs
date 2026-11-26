@@ -1,17 +1,16 @@
-using EmployeeDataImporterApi.Services.Interface;
 
 namespace EmployeeDataImporterApi.Services.Implementation;
 
 public class EmployeeFileReaderFactory
 {
-    private readonly IEnumerable<IEmployeeFileReader> _fileReaders;
+    private readonly IEnumerable<FileReaderBase> _fileReaders;
 
-    public EmployeeFileReaderFactory(IEnumerable<IEmployeeFileReader> fileReaders)
+    public EmployeeFileReaderFactory(IEnumerable<FileReaderBase> fileReaders)
     {
         _fileReaders = fileReaders;
     }
 
-    public IEmployeeFileReader GetFileReader(string extension)
+    public FileReaderBase GetFileReader(string extension)
     {
         var reader = _fileReaders.FirstOrDefault(r => r.CanReadFile(extension));
         if (reader == null)

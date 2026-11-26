@@ -35,59 +35,60 @@ public class EmployeeDataValidator
     
     public async Task<ValidationOutcome> ValidateAsync(ImportedData importedData, Guid organisationId)
     {
-        var refData = await LoadReferenceDataAsync(organisationId);
-        var rows = _employeeValidator.ValidateEmployees(importedData.ImportedEmployeesData, refData);
+        var referenceData = await LoadReferenceDataAsync(organisationId);
         
-        var res = rows
+        // validate emps
+        var employeeRows = _employeeValidator.ValidateEmployees(importedData.ImportedEmployeesData, referenceData);
+        
+        var nonSkippedEmployees = employeeRows
             .Where(r => r.Employee != null)
             .Select(r => r.Employee);
         
-        var skippedEmployees = rows.Where(r => r.Employee == null).ToList();
-
-        foreach (var e in res)
+        foreach (var e in nonSkippedEmployees)
         {
-            refData.EmployeeByNumber.Add(e!.EmployeeNumber,e);
+            referenceData.EmployeeByNumber.Add(e!.EmployeeNumber,e);
             if (e.DateOfBirth != null)
             {
                 string key = $"{e.FirstName}|{e.LastName}|{e.DateOfBirth.Value:yyyy-MM-dd}";
 
-                if (!refData.EmployeeByNameSurnameDob.TryGetValue(key, out List<Employee>? employeeList))
+                if (!referenceData.EmployeeByNameSurnameDob.TryGetValue(key, out List<Employee>? employeeList))
                 {
                     employeeList = new List<Employee>();
-                    refData.EmployeeByNameSurnameDob[key] = employeeList;
+                    referenceData.EmployeeByNameSurnameDob[key] = employeeList;
                 }
                 employeeList.Add(e);
             }
         }
         
-        var skillsRows = _skillValidator.ValidateSkills(importedData.ImportedSkillsData, refData);
+        //validate emp-skill
+        var skillsRows = _skillValidator.ValidateSkills(importedData.ImportedSkillsData, referenceData);
+        
+        var nonSkippedEmployeeSkill = skillsRows.Where(r => r.EmployeeSkill != null).ToList();
         
         // proverka dali employeeNumber - SkillId vekje postoe
-        var skillRes = skillsRows.Where(r => r.EmployeeSkill != null).ToList();
-        var skipped = skillsRows.Where(r => r.EmployeeSkill == null).ToList();
-        foreach (var r in skillRes)
+        foreach (var r in nonSkippedEmployeeSkill)
         {
             EmployeeSkill employeeSkill = r.EmployeeSkill;
-            if (refData.EmployeeSkills.ContainsKey((employeeSkill.Employee.EmployeeNumber, employeeSkill.SkillId)))
+            if (referenceData.EmployeeSkills.ContainsKey((employeeSkill.Employee.EmployeeNumber, employeeSkill.SkillId)))
             {
-                r.Result.Status = ImportStatus.Skipped;
-                r.Result.Errors.Add( new ImportRowError()
+                r.Result.RowStatus = ImportRowStatus.Skipped;
+                r.Result.Issues.Add( new ImportRowIssue()
                 {
                     Field = "",
                     Message = $"The combination {employeeSkill.Employee.EmployeeNumber} | {employeeSkill.SkillId} already exists.",
                     Value = "",
-                    ErrorType = ErrorType.DuplicateSkillEmployeeNumber
+                    IssueType = IssueType.DuplicateSkillEmployeeNumber
                 } );
                 // i treba EmployeeSkill da go stajme na null
                 r.EmployeeSkill = null;
             }
             else
             {
-                refData.EmployeeSkills.Add((employeeSkill.Employee.EmployeeNumber, employeeSkill.SkillId), employeeSkill);
+                referenceData.EmployeeSkills.Add((employeeSkill.Employee.EmployeeNumber, employeeSkill.SkillId), employeeSkill);
             }
         }
         
-        return new ValidationOutcome { EmployeeRows = rows, SkillRows = skillsRows };
+        return new ValidationOutcome { EmployeeRows = employeeRows, SkillRows = skillsRows };
     }
     
     

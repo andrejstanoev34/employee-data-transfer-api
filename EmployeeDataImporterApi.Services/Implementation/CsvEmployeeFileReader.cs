@@ -3,13 +3,12 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using EmployeeDataImporterApi.Domain.Common;
 using EmployeeDataImporterApi.Domain.Dto;
-using EmployeeDataImporterApi.Services.Interface;
 
 namespace EmployeeDataImporterApi.Services.Implementation;
 
-public class CsvEmployeeFileReader : IEmployeeFileReader
+public class CsvEmployeeFileReader : FileReaderBase
 {
-    public void ReadFile(Stream stream, ImportedData data, string fileName)
+    public override void ReadFile(Stream stream, ImportedData data, string fileName)
     {
         if (fileName.Contains("employees"))
         {
@@ -21,7 +20,7 @@ public class CsvEmployeeFileReader : IEmployeeFileReader
         }
     }
 
-    public bool CanReadFile(string extension) =>
+    public override bool CanReadFile(string extension) =>
         extension.Equals(".csv", StringComparison.OrdinalIgnoreCase);
 
     private void ReadEmployees(Stream stream, ImportedEmployeesData data)
@@ -33,8 +32,8 @@ public class CsvEmployeeFileReader : IEmployeeFileReader
             data.Message.Add("Empty employee file");
             return;   
         }
-        
-        if (!HasHeaders(csv, data.Message,
+        var present = csv.HeaderRecord!.Select(h => h.Trim().ToLower()).ToHashSet();
+        if (!HasHeaders(present, data.Message, "skills",
                 "employeenumber", "firstname", "lastname", "email", "dateofbirth",
                 "hiredate", "departmentcode", "roletitle", "officecity", "salary",
                 "phone", "manageremployeenumber"))
@@ -42,25 +41,42 @@ public class CsvEmployeeFileReader : IEmployeeFileReader
 
         while (csv.Read())
         {
+            string? employeeNumber = Get(csv, "employeenumber");
+            string? firstName = Get(csv, "firstname");
+            string? lastName = Get(csv, "lastname");
+            string? email = Get(csv, "email");
+            string? dateOfBirth = Get(csv, "dateofbirth");
+            string? hiredate = Get(csv, "hiredate");
+            string? departmentcode = Get(csv, "departmentcode");
+            string? roleTitle = Get(csv, "roletitle");
+            string? officecity = Get(csv, "officecity");
+            string? salary = Get(csv, "salary");
+            string? phone = Get(csv, "phone");
+            string? managerEmployeeNumber = Get(csv, "manageremployeenumber");
+            string? notes = Get(csv, "notes");
+            
+            if(Util.IsEmpty(employeeNumber, firstName, lastName, email, dateOfBirth, hiredate, departmentcode, roleTitle,
+                   officecity, salary, phone, managerEmployeeNumber, notes)) continue;
+            
             var emp = new ImportedEmployee
             {
                 RowNumber = csv.Parser.Row,          
-                EmployeeNumber = Get(csv, "employeenumber"),
-                FirstName = Get(csv, "firstname"),
-                LastName = Get(csv, "lastname"),
-                Email = Get(csv, "email"),
-                DateOfBirth = Get(csv, "dateofbirth"),
-                HireDate = Get(csv, "hiredate"),
-                DepartmentCode = Get(csv, "departmentcode"),
-                RoleTitle = Get(csv, "roletitle"),
-                OfficeCity = Get(csv, "officecity"),
-                Salary = Get(csv, "salary"),
-                Phone = Get(csv, "phone"),
-                ManagerEmployeeNumber = Get(csv, "manageremployeenumber"),
-                Notes = Get(csv, "notes")            
+                EmployeeNumber = employeeNumber,
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
+                DateOfBirth = dateOfBirth,
+                HireDate = hiredate,
+                DepartmentCode = departmentcode,
+                RoleTitle = roleTitle,
+                OfficeCity = officecity,
+                Salary = salary,
+                Phone = phone,
+                ManagerEmployeeNumber = managerEmployeeNumber,
+                Notes = notes           
             };
 
-            if (Util.IsEmpty(emp)) continue;
+            
             data.ImportedEmployees.Add(emp);
         }
         data.TotalEmployeeRows = data.ImportedEmployees.Count;
@@ -75,13 +91,25 @@ public class CsvEmployeeFileReader : IEmployeeFileReader
             data.Message.Add("Empty skills file");
             return;
         }
-
-        if (!HasHeaders(csv, data.Message,
+        var present = csv.HeaderRecord!.Select(h => h.Trim().ToLower()).ToHashSet();
+        if (!HasHeaders(present, data.Message, "skills",
                 "employeenumber", "firstname", "lastname", "dateofbirth", "skillname"))
             return;
 
         while (csv.Read())
         {
+            
+            string? employeeNumber = Get(csv, "employeenumber");
+            string? firstName = Get(csv, "firstname");
+            string? lastName = Get(csv, "lastname");
+            string? dateOfBirth = Get(csv, "dateofbirth");
+            string? skillName = Get(csv, "skillname");
+            
+            if (Util.IsEmpty(employeeNumber, firstName, lastName, dateOfBirth, skillName))
+            {
+                continue;
+            }
+            
             var skill = new ImportedSkill
             {
                 RowNumber = csv.Parser.Row,
@@ -92,15 +120,10 @@ public class CsvEmployeeFileReader : IEmployeeFileReader
                 SkillName = Get(csv, "skillname")
             };
 
-            if (IsEmpty(skill)) continue;        
             data.ImportedSkills.Add(skill);
         }
         data.TotalSkillRows = data.ImportedSkills.Count;
     }
-
-    private bool IsEmpty(ImportedSkill s) =>
-        new[] { s.EmployeeNumber, s.FirstName, s.LastName, s.DateOfBirth, s.SkillName }
-            .All(v => v == null);
     
     private CsvReader CreateCsv(Stream stream)
     {
@@ -113,15 +136,6 @@ public class CsvEmployeeFileReader : IEmployeeFileReader
             DetectDelimiter = true
         };
         return new CsvReader(new StreamReader(stream), config);
-    }
-    
-    private bool HasHeaders(CsvReader csv, List<string> messages, params string[] required)
-    {
-        var present = csv.HeaderRecord!.Select(h => h.Trim().ToLower()).ToHashSet();
-        var missing = required.Where(h => !present.Contains(h)).ToList();
-        foreach (var h in missing)
-            messages.Add($"The header {h} is missing. Importing stopped");
-        return missing.Count == 0;
     }
     
     private string? Get(CsvReader csv, string header)

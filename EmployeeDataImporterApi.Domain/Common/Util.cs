@@ -49,8 +49,6 @@ public static class Util
         return digits is >= 7 and <= 15;
     }
 
-    public static bool IsEmpty(ImportedEmployee e) =>
-        new[] { e.EmployeeNumber, e.FirstName, e.LastName, e.Email, e.DateOfBirth,
-            e.HireDate, e.DepartmentCode, e.RoleTitle, e.OfficeCity, e.Salary,
-            e.Phone, e.ManagerEmployeeNumber }.All(v => v == null);
+    public static bool IsEmpty(params string?[] requiredHeaders) =>
+        requiredHeaders.All(v => v == null);
 }

@@ -4,7 +4,7 @@ namespace EmployeeDataImporterApi.Domain.Models;
 
 public class Organisation: BaseEntity
 {
-    public string Name { get; set; }
+    public string Name { get; set; } =  string.Empty;
     
     public ICollection<Department> Departments { get; set; } = new List<Department>();
     

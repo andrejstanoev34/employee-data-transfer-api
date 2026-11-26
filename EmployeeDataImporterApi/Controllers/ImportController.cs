@@ -1,6 +1,6 @@
+using EmployeeDataImporterApi.Domain.CustomAttributes;
 using EmployeeDataImporterApi.Domain.Dto;
 using EmployeeDataImporterApi.Services.Implementation;
-using EmployeeDataImporterApi.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeDataImporterApi.Controllers;
@@ -12,7 +12,7 @@ public class ImportController : ControllerBase
     private readonly ImportService _importService;
     private readonly ExcelExportService _excelExportService;
 
-    public ImportController(ImportService importService, ExcelExportService excelExportService)
+    public ImportController(ImportService importService, ExcelExportService excelExportService, StatisticsQueries statisticsQueries)
     {
         _importService = importService;
         _excelExportService = excelExportService;
@@ -21,17 +21,27 @@ public class ImportController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllImportRuns()
     {
-        var res = await _importService.GetAllImportRuns();
-        return Ok(res);
+        var allImportRuns = await _importService.GetAllImportRuns();
+        return Ok(allImportRuns);
     }
 
     [HttpGet("{organisationId}")]
-    public async Task<IActionResult> GetImportRun([FromRoute] Guid organisationId)
+    public async Task<IActionResult> GetImportRunById([FromRoute] Guid organisationId)
     {
-        var res = await _importService.GetImportRunById(organisationId);
-        return Ok(res);
+        try
+        {
+            var importRunDto = await _importService.GetImportRunById(organisationId);
+            return Ok(importRunDto);
+
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+        
     }
     
+    [FileImport]
     [HttpPost("{organisationId}")]
     public async Task<IActionResult> ImportData(List<IFormFile>? files, [FromRoute] Guid organisationId)
     {
@@ -40,16 +50,14 @@ public class ImportController : ControllerBase
             return BadRequest("No Files Uploaded");
         }
         
-        var res = await _importService.ImportData(files, organisationId);
+        var importRunDto = await _importService.ImportData(files, organisationId);
         
-        return Ok(res);
-        
+        return Ok(importRunDto);
     }
 
     [HttpGet("{importRunId}/report")]
     public async Task<IActionResult> GetImportReport([FromRoute] Guid importRunId)
     {
-        //treba se fane exception
         try
         {
             var bytes = await _excelExportService.ExportToExcel(importRunId);
@@ -62,7 +70,13 @@ public class ImportController : ControllerBase
         {
             BadRequest(e.Message);
         }
-        
         return Ok();
+    }
+
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetImportStats()
+    {
+        var importStatsDto = await _importService.GetImportStats();
+        return Ok(importStatsDto);
     }
 }

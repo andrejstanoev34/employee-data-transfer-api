@@ -7,12 +7,12 @@ public class ImportRowResult: BaseEntity
 {
     public int RowNumber { get; set; }
     public string? EmployeeNumber { get; set; }
-    public ImportStatus Status { get; set; }
+    public ImportRowStatus RowStatus { get; set; }
     
     public Guid ImportRunId { get; set; }
     public ImportRun? ImportRun { get; set; }
     
     public FileType FileType { get; set; }
     
-    public List<ImportRowError> Errors { get; set; } = new List<ImportRowError>();
+    public List<ImportRowIssue> Issues { get; set; } = new List<ImportRowIssue>();
 }

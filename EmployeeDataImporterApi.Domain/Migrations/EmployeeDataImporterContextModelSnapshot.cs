@@ -342,15 +342,11 @@ namespace EmployeeDataImporterApi.Domain.Migrations
                     b.ToTable("EmployeeSkill", (string)null);
                 });
 
-            modelBuilder.Entity("EmployeeDataImporterApi.Domain.Models.ImportRowError", b =>
+            modelBuilder.Entity("EmployeeDataImporterApi.Domain.Models.ImportRowIssue", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("ErrorType")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("Field")
                         .IsRequired()
@@ -360,13 +356,19 @@ namespace EmployeeDataImporterApi.Domain.Migrations
                     b.Property<Guid>("ImportRowResultId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Message")
+                    b.Property<string>("IssueType")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("Value")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
 
@@ -400,7 +402,7 @@ namespace EmployeeDataImporterApi.Domain.Migrations
                     b.Property<int>("RowNumber")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Status")
+                    b.Property<string>("RowStatus")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -449,13 +451,13 @@ namespace EmployeeDataImporterApi.Domain.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Status")
+                    b.Property<string>("RunStatus")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("TotalRows")
                         .ValueGeneratedOnAdd()
@@ -942,10 +944,10 @@ namespace EmployeeDataImporterApi.Domain.Migrations
                     b.Navigation("Skill");
                 });
 
-            modelBuilder.Entity("EmployeeDataImporterApi.Domain.Models.ImportRowError", b =>
+            modelBuilder.Entity("EmployeeDataImporterApi.Domain.Models.ImportRowIssue", b =>
                 {
                     b.HasOne("EmployeeDataImporterApi.Domain.Models.ImportRowResult", "ImportRowResult")
-                        .WithMany("Errors")
+                        .WithMany("Issues")
                         .HasForeignKey("ImportRowResultId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1002,7 +1004,7 @@ namespace EmployeeDataImporterApi.Domain.Migrations
 
             modelBuilder.Entity("EmployeeDataImporterApi.Domain.Models.ImportRowResult", b =>
                 {
-                    b.Navigation("Errors");
+                    b.Navigation("Issues");
                 });
 
             modelBuilder.Entity("EmployeeDataImporterApi.Domain.Models.ImportRun", b =>

@@ -5,10 +5,10 @@ namespace EmployeeDataImporterApi.Domain.Models;
 
 public class Employee: BaseEntity
 {
-    public string EmployeeNumber {get; set;}
-    public string FirstName {get; set;}
-    public string LastName {get; set;}
-    public string Email {get; set;}
+    public string EmployeeNumber {get; set;} = string.Empty;
+    public string FirstName {get; set;} = string.Empty;
+    public string LastName {get; set;} = string.Empty;
+    public string Email {get; set;}  = string.Empty;
     public DateOnly? DateOfBirth {get; set;}
     public DateOnly HireDate {get; set;}
     public decimal? Salary {get; set;}

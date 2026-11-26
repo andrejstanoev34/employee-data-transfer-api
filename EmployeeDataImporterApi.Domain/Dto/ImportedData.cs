@@ -7,11 +7,11 @@ public class ImportedData
     public ImportedEmployeesData ImportedEmployeesData { get; set; } = new();
     public ImportedSkillsData ImportedSkillsData { get; set; } = new();
     public void AddMessage(string message) => _messages.Add(message);
-    public List<string> Message =>
+    public List<string> Messages =>
         _messages
             .Concat(ImportedEmployeesData.Message)
             .Concat(ImportedSkillsData.Message)
             .ToList();
 
-    public bool HasIssue => Message.Count > 0;
+    public bool HasIssue => Messages.Count > 0;
 }

@@ -9,19 +9,19 @@ public class RowIssues
     public bool MustSkip { get; private set; }
     public RowIssues(ImportRowResult result) => _result = result;
 
-    public void Required(string field, ErrorType type, string message, string? original)
+    public void Required(string field, IssueType type, string message, string? original)
     {
         MustSkip = true;
-        _result.Status = ImportStatus.Skipped;
+        _result.RowStatus = ImportRowStatus.Skipped;
         Add(field, type, message, original);
     }
 
-    public void Optional(string field, ErrorType type, string message, string? original) =>
+    public void Optional(string field, IssueType type, string message, string? original) =>
         Add(field, type, message, original);
 
-    private void Add(string field, ErrorType type, string message, string? original) =>
-        _result.Errors.Add(new ImportRowError
+    private void Add(string field, IssueType type, string message, string? original) =>
+        _result.Issues.Add(new ImportRowIssue
         {
-            Field = field, ErrorType = type, Message = message, Value = original ?? ""
+            Field = field, IssueType = type, Message = message, Value = original ?? ""
         });
 }

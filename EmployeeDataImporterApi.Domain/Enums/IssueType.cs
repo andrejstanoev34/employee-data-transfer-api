@@ -1,6 +1,6 @@
 namespace EmployeeDataImporterApi.Domain.Enums;
 
-public enum ErrorType
+public enum IssueType
 {
     MissingRequiredField, 
     EmailInvalid, 
